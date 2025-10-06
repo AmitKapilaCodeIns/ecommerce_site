@@ -1,1 +1,1 @@
-ECommerce Site Confirmation for Order Number {{ order.order_number }}
+Atelier Étoile Confirmation for Order Number {{ order.order_number }}
