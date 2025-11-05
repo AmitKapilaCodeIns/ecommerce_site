@@ -3,6 +3,9 @@
 
 A fully featured **Django-based e-commerce web application** that demonstrates secure payment processing, robust authentication, and modern deployment practices.
 
+![Mockup](./media/all-devices-white.png)
+
+
 [Live Site](https://milestone4ecommerce-6c0c8f5c0454.herokuapp.com)
 
 ---
