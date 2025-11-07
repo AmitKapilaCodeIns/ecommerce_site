@@ -1,3 +1,28 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Atelier Étoile](#atelier-%C3%89toile)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Wireframes](#wireframes)
+    - [Home page](#home-page)
+  - [Features](#features)
+  - [Technology Stack](#technology-stack)
+  - [System Architecture](#system-architecture)
+  - [Database Design](#database-design)
+  - [Deployment](#deployment)
+  - [Setup Instructions](#setup-instructions)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Environment Variables](#environment-variables)
+    - [Run Locally](#run-locally)
+  - [Testing](#testing)
+  - [Future Enhancements](#future-enhancements)
+  - [Credits](#credits)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Atelier Étoile
 
 
