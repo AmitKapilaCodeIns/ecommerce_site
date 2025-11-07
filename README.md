@@ -3,7 +3,7 @@
 
 A fully featured **Django-based e-commerce web application** that demonstrates secure payment processing, robust authentication, and modern deployment practices.
 
-![Mockup](./media/all-devices-white.png)
+![Mockup](./documentation/all-devices-white.png)
 
 
 [Live Site](https://milestone4ecommerce-6c0c8f5c0454.herokuapp.com)
@@ -31,6 +31,12 @@ This project was built as part of my ongoing exploration of **Django web applica
 
 The goal is to demonstrate the ability to build and deploy a production-grade Django application with a cloud-hosted database and static/media asset management via Heroku.
 
+---
+## Wireframes
+
+-   These wireframes were created using simple ASCII-style text during the Scope Plane part of the design and planning process for this project. The site was developed with the Desktop layout method first. The wireframes were therefore drawn with that thought in mind and adapted alongside project changes.
+### Home page
+-   ![Screenshot Home Page wireframe ](./documentation/atelierWframe.png)
 ---
 
 ## Features
