@@ -240,13 +240,13 @@ account         allauth         base.html       includes        socialaccount   
 ```
 import os
 
-os.environ.setdefault('STRIPE_PUBLIC_KEY', 'pk_test_51S6adT10TOM7XeCKnkUW5swtSdgzZeMuP9IObXDbmNy28wWogBKsuXF8DZNHdpYqBoaBzyoahfEKOwTKaYKkJ7mU00AYkNTPGf')
+os.environ.setdefault('STRIPE_PUBLIC_KEY', '')
 
-os.environ.setdefault('STRIPE_SECRET_KEY', 'sk_test_51S6adT10TOM7XeCKzSCsDp2nSsMllsoROSDw38dSDhiYcyWju547mR5sziWEzpodaniSeDz2JnleFdedVemUnX3r008epHZvz0')
+os.environ.setdefault('STRIPE_SECRET_KEY', '')
 
-os.environ.setdefault('STRIPE_WH_SECRET', 'whsec_27fdd326665524c9f80b7198bae56cf39f1e0f96d7ad2aefe4a44ea7d42f0d5c')
+os.environ.setdefault('STRIPE_WH_SECRET', '')
 
-os.environ.setdefault('SECRET_KEY', 'nD<K=Eaw@*AU8s8!~UFuIuGSKWZ$,B')
+os.environ.setdefault('SECRET_KEY', '')
 
 os.environ.setdefault('DEVELOPMENT', '1')
 
