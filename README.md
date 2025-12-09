@@ -3,6 +3,7 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [Atelier Étoile](#atelier-%C3%89toile)
+    - [A link to the deployed live page](#a-link-to-the-deployed-live-page)
   - [Overview](#overview)
   - [Requirements](#requirements)
   - [User Stories](#user-stories)
@@ -83,7 +84,7 @@ A fully featured **Django-based e-commerce web application** that demonstrates s
 
 ![Mockup](./documentation/all-devices-white.png)
 
-
+### A link to the deployed live page
 [Live Site](https://milestone4ecommerce-6c0c8f5c0454.herokuapp.com)
 
 ---
