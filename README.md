@@ -86,7 +86,7 @@ A fully featured **Django-based e-commerce web application** that demonstrates s
 
 ![Mockup](./documentation/all-devices-white.png)
 
-### A link to the deployed live page
+### Heroku hosted live page
 [Live Site](https://milestone4ecommerce-6c0c8f5c0454.herokuapp.com)
 
 ---
