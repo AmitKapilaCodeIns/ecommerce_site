@@ -37,7 +37,7 @@
       - [Database Configuration (settings.py & dj_database_url)](#database-configuration-settingspy--dj_database_url)
       - [Loose Coupling with urls.py](#loose-coupling-with-urlspy)
       - [Admin pages](#admin-pages)
-      - [References settings.py](#references-settingspy)
+      - [References in settings.py](#references-in-settingspy)
       - [AllAuth](#allauth)
       - [Email](#email)
       - [Templates and views](#templates-and-views)
@@ -60,12 +60,14 @@
       - [Products app](#products-app)
         - [products/models.py](#productsmodelspy)
         - [base.css](#basecss)
+        - [Later changes](#later-changes)
       - [Code format](#code-format)
       - [Code understandability](#code-understandability)
       - [Code validation](#code-validation)
   - [System Architecture](#system-architecture)
   - [Database Design](#database-design)
   - [Deployment](#deployment)
+  - [I want my background image to work via Cloudinary. I replace /media/homepage_background_cropped.jpg in base.css with the Cloudinary URL.](#i-want-my-background-image-to-work-via-cloudinary-i-replace-mediahomepage_background_croppedjpg-in-basecss-with-the-cloudinary-url)
   - [Setup Instructions](#setup-instructions)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
@@ -333,7 +335,7 @@ I use the list_display attribute, which is a tuple that will tell the admin whic
 I added friendly_name and name to the category admin class to make sure that those display there.
 I sort the products by SKU using the ordering attribute.
 
-#### References settings.py
+#### References in settings.py
 
 
 ```
@@ -1115,6 +1117,159 @@ It's a 100% height and width div, fixed at the top left of the screen.
 With the white background and a z-index of negative 1 to make sure that it sits behind all the content.
 By putting this in base.css I'll reuse it in most of the other templates on the site as well.
 
+##### Later changes
+
+I want my Heroku deployed app to show the images as hosted on Cloudinary. I had to change my models to use CloudinaryField instead of Django’s default ImageField.
+
+```
+image = models.ImageField(null=True, blank=True)
+```
+
+ImageField = local storage → not allowed on Heroku (filesystem is ephemeral, wiped after each deploy)
+CloudinaryField = Cloudinary-hosted images → exactly what I want.
+
+I made some code changes then made my migrations:
+
+```
+from cloudinary.models import CloudinaryField
+
+class Product(models.Model):
+    ...
+    image_url = models.URLField(max_length=1024, null=True, blank=True)
+
+    # ❗ Use Cloudinary instead of ImageField
+    image = CloudinaryField('image', null=True, blank=True)
+```
+
+Everything uploads to and serves from Cloudinary automatically. Then I can delete image_url.
+
+I already have:
+
+```
+<img src="{{ product.image.url }}">
+```
+This works with CloudinaryField — CloudinaryField generates .url automatically.
+
+➡️ Note:
+Even though I'm using Cloudinary, Django still internally needs a MEDIA_URL.
+CloudinaryStorage replaces the location (not the URL structure).
+I added these lines to my settings.
+
+```
+MEDIA_URL = '/media/'
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+```
+
+The DEFAULT_FILE_STORAGE tells Django:
+“Whenever a file is uploaded (e.g., in ImageField), save it to Cloudinary instead of the local filesystem.”
+
+With this setting uploaded images go directly to Cloudinary.
+Django stores only metadata (URL, public_id, etc.)
+➡️ This is the critical line that makes Cloudinary image hosting work.
+
+I added CLOUDINARY_URL in my env.py.
+
+When using Cloudinary I remove image_url field from my model & admin because it's no longer used. Then my products.json was corrected with products/<filename>.
+
+I then had to upload images again through fixtures.
+
+I was in a situation where I have all the media in the media folder. I also have a products/fixtures folder. I have a products.json file. Here is one entry:
+```json
+[{
+    "pk": 1,
+    "model": "products.product",
+    "fields": {
+        "sku": "pp5001340155",
+        "name": "Arizona Original Bootcut Jeans",
+        "description": "Bootcut jeans in our just-right original fit are comfortable and look great too.  5-pocket style sits below waist straight fit through seat and thigh bootcut leg 18\" leg opening cotton washable imported extended sizes and washes available online only",
+        "price": 53.99,
+        "category": 6,
+        "rating": 4.6,
+        "image_url": "http://s7d9.scene7.com/is/image/JCPenney/DP0709201205510679M.tif?hei=380&amp;wid=380&op_usm=.4,.8,0,0&resmode=sharp2&op_usm=1.5,.8,0,0&resmode=sharp",
+        "image": "DP0709201205510679M.jpg"
+    }
+}, 
+```
+
+I needed to change the products.json file to fix the missing image files on Heroku. Then run "python3 manage.py loaddata products". This is because currently the image key won't work:
+
+```
+"image": "DP0709201205510679M.jpg"
+```
+
+But CloudinaryField does NOT upload from a filename.
+When I load fixtures, Django tries to set the value of the CloudinaryField directly to "DP0709201205510679M.jpg" — which Cloudinary cannot find, because:
+
+- That file is sitting locally in your /media folder
+- Heroku does not persist media files
+- Nothing gets uploaded to Cloudinary automatically
+
+So Heroku ends up with a Cloudinary URL like:
+http://res.cloudinary.com/.../image/upload/DP0709201205510679M.jpg
+…but that public_id does not exist in Cloudinary, so Cloudinary returns a missing image.
+
+I need to change my fixtures to reference full Cloudinary upload URLs.
+
+I inspected a working product image on Heroku:
+
+```html
+<img class="card-img-top img-fluid" src="http://res.cloudinary.com/dra4ze9d3/image/upload/v1765219483/cp2nowa0cxsf1w1swsdj.jpg" alt="Arizona Original Bootcut Jeans">
+```
+That gives me the public_id I need. The public_id is "cp2nowa0cxsf1w1swsdj".
+
+This particular product’s image was successfully uploaded to Cloudinary but the rest of my products were not.
+The working image (cp2nowa0cxsf1w1swsdj) was uploaded manually.
+So to fix all missing images I created upload_images_to_cloudinary.py. 
+
+This script produces a mapping to update to my products.json so all images work on Heroku.
+
+It also:
+- Uploads each image to products/ folder in Cloudinary.
+- Stores a mapping local filename → public_id.
+- Prints the mapping at the end — which I can use to update products.json easily.
+
+Here is the output:
+
+```
+DP0404201617034330M.jpg → products/DP0404201617034330M DP0828201517024772M.jpg → products/DP0828201517024772M DP0515201517012588M.jpg → products/DP0515201517012588M DP1023201317051585M.jpg → products/DP1023201317051585M DP1228201517142050M.jpg → products/DP1228201517142050M noimage.png → products/noimage DP1208201517020379M.jpg → products/DP1208201517020379M
+```
+
+The next step is to generate an updated "products.json" where all image references are replaced with the corresponding Cloudinary public IDs.
+
+I wrote a script that for each image key changes the "value" to "products/value" and removes the image_url key from all. That script is changeprodfix.py.
+
+I then installed the Heroku CLI in order to fix the Heroku database so that all product images are set to products/<public_id>.
+
+```
+$ brew tap heroku/brew && brew install heroku
+$ heroku login
+$ heroku apps
+$ heroku run python manage.py shell --app milestone4ecommerce
+ ›   Warning: heroku update available from 10.13.2 to 10.16.0.
+Running python manage.py shell on milestone4ecommerce... up, run.7122
+Python 3.11.11 (main, Dec  4 2024, 12:01:11) [GCC 13.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>>
+>>> from products.models import Product
+>>> count = 0
+>>> for p in Product.objects.all():
+...    if hasattr(p.image, "public_id"):
+...       public_id = p.image.public_id
+...       if public_id.startswith("products/"):
+...          continue
+...       new_public_id = f"products/{public_id}"
+...       p.image.public_id = new_public_id
+...       p.save()
+...       count += 1
+... 
+>>> 
+>>> count
+172
+>>>
+```
 
 #### Code format
 
@@ -1232,6 +1387,23 @@ This project is deployed on **Heroku** with the following configuration:
 
 Static and media files are served via **Cloudinary**.
 
+CSS is being served on Heroku. I installed whitenoise then saved that to my requirements.txt. WhiteNoiseMiddleware should be first in MIDDLEWARE after SecurityMiddleware.
+
+```
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    # ...
+]
+```
+To ensure my CSS/JS is versioned and served with proper headers:
+```
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+```
+Then I ran "python3 manage.py collectstatic". The command creates staticfiles/, but I do not commit that folder — which is correct. Heroku will run collectstatic during deployment and serve CSS via WhiteNoise. I don't have DISABLE_COLLECTSTATIC set in Config Vars on Heroku.
+
+I want my background image to work via Cloudinary. I replace /media/homepage_background_cropped.jpg in base.css with the Cloudinary URL.
 ---
 
 ## Setup Instructions
